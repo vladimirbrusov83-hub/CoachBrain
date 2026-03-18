@@ -1,0 +1,481 @@
+[
+  {
+    "date": "2024-09-23",
+    "status": "completed",
+    "sessionTitle": "Day 1",
+    "exercises": [
+      {
+        "name": "Close Grip Bench Press",
+        "sets": [
+          { "weight": 135, "reps": 8, "rir": 3 },
+          { "weight": 135, "reps": 8, "rir": 3 },
+          { "weight": 135, "reps": 8, "rir": 3 }
+        ],
+        "coachNote": "First session back — stay here"
+      },
+      {
+        "name": "deadlift",
+        "sets": [
+          { "weight": 185, "reps": 5, "rir": 4 },
+          { "weight": 185, "reps": 5, "rir": 3 },
+          { "weight": 185, "reps": 5, "rir": 3 }
+        ]
+      }
+    ]
+  },
+  {
+    "date": "2024-09-30",
+    "status": "completed",
+    "sessionTitle": "Day 1",
+    "exercises": [
+      {
+        "name": "Close Grip Bench Press",
+        "sets": [
+          { "weight": 135, "reps": 8, "rir": 3 },
+          { "weight": 135, "reps": 8, "rir": 2 },
+          { "weight": 135, "reps": 8, "rir": 2 }
+        ],
+        "coachNote": "Go to 145 next"
+      },
+      {
+        "name": "deadlift",
+        "sets": [
+          { "weight": 185, "reps": 5, "rir": 3 },
+          { "weight": 185, "reps": 5, "rir": 2 },
+          { "weight": 185, "reps": 5, "rir": 2 }
+        ],
+        "coachNote": "Go to 195 next"
+      }
+    ]
+  },
+  {
+    "date": "2024-10-07",
+    "status": "completed",
+    "sessionTitle": "Day 1",
+    "exercises": [
+      {
+        "name": "Close Grip Bench Press",
+        "sets": [
+          { "weight": 145, "reps": 8, "rir": 3 },
+          { "weight": 145, "reps": 8, "rir": 2 },
+          { "weight": 145, "reps": 8, "rir": 2 }
+        ]
+      },
+      {
+        "name": "deadlift",
+        "sets": [
+          { "weight": 195, "reps": 5, "rir": 3 },
+          { "weight": 195, "reps": 5, "rir": 2 },
+          { "weight": 195, "reps": 5, "rir": 2 }
+        ]
+      }
+    ]
+  },
+  {
+    "date": "2024-10-14",
+    "status": "completed",
+    "sessionTitle": "Day 1",
+    "exercises": [
+      {
+        "name": "Close Grip Bench Press",
+        "sets": [
+          { "weight": 145, "reps": 8, "rir": 2 },
+          { "weight": 145, "reps": 8, "rir": 2 },
+          { "weight": 145, "reps": 8, "rir": 1 }
+        ],
+        "coachNote": "Go to 155 next"
+      },
+      {
+        "name": "deadlift",
+        "sets": [
+          { "weight": 195, "reps": 5, "rir": 2 },
+          { "weight": 195, "reps": 5, "rir": 2 },
+          { "weight": 195, "reps": 5, "rir": 1 }
+        ],
+        "coachNote": "Go to 205 next"
+      }
+    ]
+  },
+  {
+    "date": "2024-10-21",
+    "status": "completed",
+    "sessionTitle": "Day 1",
+    "exercises": [
+      {
+        "name": "Close Grip Bench Press",
+        "sets": [
+          { "weight": 155, "reps": 8, "rir": 2 },
+          { "weight": 155, "reps": 8, "rir": 2 },
+          { "weight": 155, "reps": 8, "rir": 2 }
+        ]
+      },
+      {
+        "name": "deadlift",
+        "sets": [
+          { "weight": 205, "reps": 5, "rir": 3 },
+          { "weight": 205, "reps": 5, "rir": 2 },
+          { "weight": 205, "reps": 5, "rir": 2 }
+        ]
+      }
+    ]
+  },
+  {
+    "date": "2024-10-28",
+    "status": "completed",
+    "sessionTitle": "Day 1",
+    "exercises": [
+      {
+        "name": "Close Grip Bench Press",
+        "sets": [
+          { "weight": 155, "reps": 8, "rir": 2 },
+          { "weight": 155, "reps": 8, "rir": 1 },
+          { "weight": 155, "reps": 8, "rir": 1 }
+        ],
+        "coachNote": "Go to 165 next"
+      },
+      {
+        "name": "deadlift",
+        "sets": [
+          { "weight": 205, "reps": 5, "rir": 2 },
+          { "weight": 205, "reps": 5, "rir": 2 },
+          { "weight": 205, "reps": 5, "rir": 1 }
+        ],
+        "coachNote": "Go to 215 next"
+      }
+    ]
+  },
+  {
+    "date": "2024-11-04",
+    "status": "completed",
+    "sessionTitle": "Day 1",
+    "exercises": [
+      {
+        "name": "Close Grip Bench Press",
+        "sets": [
+          { "weight": 165, "reps": 8, "rir": 2 },
+          { "weight": 165, "reps": 8, "rir": 2 },
+          { "weight": 165, "reps": 8, "rir": 1 }
+        ]
+      },
+      {
+        "name": "deadlift",
+        "sets": [
+          { "weight": 215, "reps": 5, "rir": 2 },
+          { "weight": 215, "reps": 5, "rir": 2 },
+          { "weight": 215, "reps": 5, "rir": 2 }
+        ]
+      }
+    ]
+  },
+  {
+    "date": "2024-11-11",
+    "status": "completed",
+    "sessionTitle": "Day 1",
+    "exercises": [
+      {
+        "name": "Close Grip Bench Press",
+        "sets": [
+          { "weight": 165, "reps": 8, "rir": 2 },
+          { "weight": 165, "reps": 8, "rir": 1 },
+          { "weight": 165, "reps": 8, "rir": 1 }
+        ],
+        "coachNote": "Go to 170 next"
+      },
+      {
+        "name": "deadlift",
+        "sets": [
+          { "weight": 215, "reps": 5, "rir": 2 },
+          { "weight": 215, "reps": 5, "rir": 1 },
+          { "weight": 215, "reps": 5, "rir": 1 }
+        ],
+        "coachNote": "Go to 225 next"
+      }
+    ]
+  },
+  {
+    "date": "2024-11-18",
+    "status": "completed",
+    "sessionTitle": "Day 1",
+    "exercises": [
+      {
+        "name": "Close Grip Bench Press",
+        "sets": [
+          { "weight": 170, "reps": 8, "rir": 2 },
+          { "weight": 170, "reps": 8, "rir": 1 },
+          { "weight": 170, "reps": 8, "rir": 1 }
+        ]
+      },
+      {
+        "name": "deadlift",
+        "sets": [
+          { "weight": 225, "reps": 5, "rir": 2 },
+          { "weight": 225, "reps": 5, "rir": 1 },
+          { "weight": 225, "reps": 5, "rir": 1 }
+        ]
+      }
+    ]
+  },
+  {
+    "date": "2024-11-25",
+    "status": "completed",
+    "sessionTitle": "Day 1",
+    "exercises": [
+      {
+        "name": "Close Grip Bench Press",
+        "sets": [
+          { "weight": 170, "reps": 8, "rir": 1 },
+          { "weight": 170, "reps": 8, "rir": 1 },
+          { "weight": 170, "reps": 7, "rir": 0 }
+        ],
+        "coachNote": "Hard session — stay here"
+      },
+      {
+        "name": "deadlift",
+        "sets": [
+          { "weight": 225, "reps": 5, "rir": 1 },
+          { "weight": 225, "reps": 5, "rir": 1 },
+          { "weight": 225, "reps": 5, "rir": 0 }
+        ],
+        "coachNote": "Grind — stay at 225"
+      }
+    ]
+  },
+  {
+    "date": "2024-12-02",
+    "status": "completed",
+    "sessionTitle": "Day 1",
+    "exercises": [
+      {
+        "name": "Close Grip Bench Press",
+        "sets": [
+          { "weight": 170, "reps": 8, "rir": 1 },
+          { "weight": 170, "reps": 8, "rir": 1 },
+          { "weight": 170, "reps": 7, "rir": 0 }
+        ],
+        "coachNote": "Deload incoming"
+      },
+      {
+        "name": "deadlift",
+        "sets": [
+          { "weight": 225, "reps": 5, "rir": 1 },
+          { "weight": 225, "reps": 5, "rir": 0 },
+          { "weight": 225, "reps": 4, "rir": 0 }
+        ],
+        "coachNote": "Deload incoming"
+      }
+    ]
+  },
+  {
+    "date": "2024-12-09",
+    "status": "completed",
+    "sessionTitle": "Day 1 — Deload",
+    "isDeload": true,
+    "exercises": [
+      {
+        "name": "Close Grip Bench Press",
+        "sets": [
+          { "weight": 75, "reps": 8, "rir": 5 },
+          { "weight": 75, "reps": 8, "rir": 5 }
+        ],
+        "coachNote": "Deload — easy"
+      },
+      {
+        "name": "deadlift",
+        "sets": [
+          { "weight": 100, "reps": 5, "rir": 6 },
+          { "weight": 100, "reps": 5, "rir": 6 }
+        ],
+        "coachNote": "Deload — easy"
+      }
+    ]
+  },
+  {
+    "date": "2024-12-16",
+    "status": "completed",
+    "sessionTitle": "Day 1 — Deload",
+    "isDeload": true,
+    "exercises": [
+      {
+        "name": "Close Grip Bench Press",
+        "sets": [
+          { "weight": 75, "reps": 8, "rir": 6 },
+          { "weight": 75, "reps": 8, "rir": 6 }
+        ],
+        "coachNote": "Last deload session — resume next week"
+      },
+      {
+        "name": "deadlift",
+        "sets": [
+          { "weight": 100, "reps": 5, "rir": 7 },
+          { "weight": 100, "reps": 5, "rir": 7 }
+        ]
+      }
+    ]
+  },
+  {
+    "date": "2024-12-23",
+    "status": "completed",
+    "sessionTitle": "Day 1 — Reload W1",
+    "exercises": [
+      {
+        "name": "Close Grip Bench Press",
+        "sets": [
+          { "weight": 110, "reps": 8, "rir": 5 },
+          { "weight": 110, "reps": 8, "rir": 4 },
+          { "weight": 110, "reps": 8, "rir": 4 }
+        ],
+        "coachNote": "Reload week 1"
+      },
+      {
+        "name": "deadlift",
+        "sets": [
+          { "weight": 140, "reps": 5, "rir": 5 },
+          { "weight": 140, "reps": 5, "rir": 4 },
+          { "weight": 140, "reps": 5, "rir": 4 }
+        ]
+      }
+    ]
+  },
+  {
+    "date": "2024-12-30",
+    "status": "completed",
+    "sessionTitle": "Day 1 — Reload W2",
+    "exercises": [
+      {
+        "name": "Close Grip Bench Press",
+        "sets": [
+          { "weight": 125, "reps": 8, "rir": 4 },
+          { "weight": 125, "reps": 8, "rir": 3 },
+          { "weight": 125, "reps": 8, "rir": 3 }
+        ]
+      },
+      {
+        "name": "deadlift",
+        "sets": [
+          { "weight": 160, "reps": 5, "rir": 4 },
+          { "weight": 160, "reps": 5, "rir": 3 },
+          { "weight": 160, "reps": 5, "rir": 3 }
+        ]
+      }
+    ]
+  },
+  {
+    "date": "2025-01-06",
+    "status": "completed",
+    "sessionTitle": "Day 1 — Reload W3",
+    "exercises": [
+      {
+        "name": "Close Grip Bench Press",
+        "sets": [
+          { "weight": 145, "reps": 8, "rir": 3 },
+          { "weight": 145, "reps": 8, "rir": 3 },
+          { "weight": 145, "reps": 8, "rir": 2 }
+        ]
+      },
+      {
+        "name": "deadlift",
+        "sets": [
+          { "weight": 185, "reps": 5, "rir": 3 },
+          { "weight": 185, "reps": 5, "rir": 2 },
+          { "weight": 185, "reps": 5, "rir": 2 }
+        ]
+      }
+    ]
+  },
+  {
+    "date": "2025-01-13",
+    "status": "completed",
+    "sessionTitle": "Day 1",
+    "exercises": [
+      {
+        "name": "Close Grip Bench Press",
+        "sets": [
+          { "weight": 155, "reps": 8, "rir": 2 },
+          { "weight": 155, "reps": 8, "rir": 2 },
+          { "weight": 155, "reps": 8, "rir": 2 }
+        ],
+        "coachNote": "Go to 165 next"
+      },
+      {
+        "name": "deadlift",
+        "sets": [
+          { "weight": 195, "reps": 5, "rir": 3 },
+          { "weight": 195, "reps": 5, "rir": 2 },
+          { "weight": 195, "reps": 5, "rir": 2 }
+        ]
+      }
+    ]
+  },
+  {
+    "date": "2025-01-20",
+    "status": "completed",
+    "sessionTitle": "Day 1",
+    "exercises": [
+      {
+        "name": "Close Grip Bench Press",
+        "sets": [
+          { "weight": 165, "reps": 8, "rir": 2 },
+          { "weight": 165, "reps": 8, "rir": 2 },
+          { "weight": 165, "reps": 8, "rir": 1 }
+        ]
+      },
+      {
+        "name": "deadlift",
+        "sets": [
+          { "weight": 195, "reps": 5, "rir": 2 },
+          { "weight": 195, "reps": 5, "rir": 2 },
+          { "weight": 195, "reps": 5, "rir": 1 }
+        ],
+        "coachNote": "Go to 205 next"
+      }
+    ]
+  },
+  {
+    "date": "2025-01-27",
+    "status": "completed",
+    "sessionTitle": "Day 1",
+    "exercises": [
+      {
+        "name": "Close Grip Bench Press",
+        "sets": [
+          { "weight": 165, "reps": 8, "rir": 2 },
+          { "weight": 165, "reps": 8, "rir": 1 },
+          { "weight": 165, "reps": 8, "rir": 1 }
+        ],
+        "coachNote": "Go to 175 next"
+      },
+      {
+        "name": "deadlift",
+        "sets": [
+          { "weight": 205, "reps": 5, "rir": 2 },
+          { "weight": 205, "reps": 5, "rir": 2 },
+          { "weight": 205, "reps": 5, "rir": 2 }
+        ]
+      }
+    ]
+  },
+  {
+    "date": "2025-02-03",
+    "status": "completed",
+    "sessionTitle": "Day 1",
+    "exercises": [
+      {
+        "name": "Close Grip Bench Press",
+        "sets": [
+          { "weight": 175, "reps": 8, "rir": 2 },
+          { "weight": 175, "reps": 8, "rir": 2 },
+          { "weight": 175, "reps": 8, "rir": 1 }
+        ]
+      },
+      {
+        "name": "deadlift",
+        "sets": [
+          { "weight": 205, "reps": 5, "rir": 2 },
+          { "weight": 205, "reps": 5, "rir": 1 },
+          { "weight": 205, "reps": 5, "rir": 1 }
+        ],
+        "coachNote": "Go to 215 next"
+      }
+    ]
+  }
+]

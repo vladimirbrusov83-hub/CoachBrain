@@ -1,0 +1,21 @@
+{
+  "name": "coachbrain",
+  "version": "0.1.0",
+  "description": "Progressive overload engine built from real athlete training data",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": ["fitness", "coaching", "progressive-overload", "typescript"],
+  "author": "Vladimir Brusov",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "vitest": "^1.4.0"
+  }
+}
