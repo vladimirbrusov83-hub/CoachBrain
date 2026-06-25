@@ -4,11 +4,11 @@ import { describe, it, expect } from 'vitest';
 import { getWarmupSets } from '../src/warmup';
 
 describe('getWarmupSets — compound lifts', () => {
-  it('bench press 225 lbs → full 5-set ladder', () => {
+  it('bench press 225 kg → full 5-set ladder', () => {
     const sets = getWarmupSets(225, 'BB bench press');
     expect(sets).toHaveLength(5);
-    // Set 1: bar
-    expect(sets[0].weight).toBe(45);
+    // Set 1: bar (20 kg)
+    expect(sets[0].weight).toBe(20);
     expect(sets[0].reps).toBe(10);
     // Set 2: 40% of 225 = 90
     expect(sets[1].weight).toBe(90);
@@ -24,29 +24,27 @@ describe('getWarmupSets — compound lifts', () => {
     expect(sets[4].reps).toBe(2);
   });
 
-  it('bench press 90 lbs (< 95) → only 3 sets (no sets 4 and 5)', () => {
-    const sets = getWarmupSets(90, 'BB bench press');
-    // Below 95 lbs: skip sets 4 and 5 (would be too close to working weight)
+  it('bench press 30 kg (< 40) → only 3 sets (no sets 4 and 5)', () => {
+    const sets = getWarmupSets(30, 'BB bench press');
+    // Below 40 kg: skip sets 4 and 5 (would be too close to working weight)
     expect(sets).toHaveLength(3);
-    expect(sets[0].weight).toBe(45); // bar
+    expect(sets[0].weight).toBe(20); // bar
     expect(sets[1].reps).toBe(8);   // 40% set
     expect(sets[2].reps).toBe(5);   // 60% set
   });
 
-  it('bench press 120 lbs (between 95 and 135) → 3 sets (skips sets 4 and 5)', () => {
-    // 95 ≤ W < 135: skip set 5 only per spec... but re-reading:
-    // "If W < 95 lbs: skip sets 4 and 5 / If W < 135 lbs: skip set 5 only"
-    // So 120 lbs: skip set 5 only → 4 sets
-    const sets = getWarmupSets(120, 'BB bench press');
+  it('bench press 50 kg (between 40 and 60) → 4 sets (skips set 5)', () => {
+    // 40 ≤ W < 60: include set 4 (75%), skip the heavy 85% top set
+    const sets = getWarmupSets(50, 'BB bench press');
     expect(sets).toHaveLength(4);
-    expect(sets[0].weight).toBe(45);
+    expect(sets[0].weight).toBe(20);
     expect(sets[3].reps).toBe(3); // set 4 at 75%
   });
 
   it('deadlift counts as compound lift → multi-set ladder', () => {
     const sets = getWarmupSets(315, 'deadlift');
     expect(sets.length).toBeGreaterThanOrEqual(4);
-    expect(sets[0].weight).toBe(45);
+    expect(sets[0].weight).toBe(20);
   });
 
   it('all weights are rounded to nearest 5', () => {
@@ -59,7 +57,7 @@ describe('getWarmupSets — compound lifts', () => {
   it('close grip bench press counts as compound', () => {
     const sets = getWarmupSets(225, 'close grip bench press');
     expect(sets.length).toBeGreaterThanOrEqual(4);
-    expect(sets[0].weight).toBe(45);
+    expect(sets[0].weight).toBe(20);
   });
 });
 

@@ -1,7 +1,7 @@
 // src/types.ts
 
 export interface WorkingSet {
-  weight: number;         // in lbs
+  weight: number;         // in kg (the coach's logging unit; lb logs are normalized upstream)
   reps: number;
   rir?: number;           // 0–10; undefined if athlete did not record it
   rpe?: number;           // 0–10; optional alternative to RIR

@@ -97,9 +97,9 @@ describe('getDeloadSessionPlan', () => {
     expect(plan.setReduction).toBe(1);
   });
 
-  it('never goes below 45 lbs (bar weight)', () => {
-    const plan = getDeloadSessionPlan(45);
-    expect(plan.deloadWeight).toBeGreaterThanOrEqual(45);
+  it('never goes below the empty bar (20 kg)', () => {
+    const plan = getDeloadSessionPlan(20);
+    expect(plan.deloadWeight).toBeGreaterThanOrEqual(20);
   });
 
   it('rounds to nearest 5', () => {

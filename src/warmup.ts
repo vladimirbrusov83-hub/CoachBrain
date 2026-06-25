@@ -48,17 +48,20 @@ function getWarmupCategory(exerciseName: string): WarmupCategory {
   return 'isolation';
 }
 
-// Build the compound warm-up ladder
-// Set 1: bar (45 lbs) × 10
+// Build the compound warm-up ladder (weights in kg).
+// Set 1: empty bar (20 kg) × 10
 // Set 2: 40% × 8
 // Set 3: 60% × 5
-// Set 4: 75% × 3 (skipped if W < 135)
-// Set 5: 85% × 2 (skipped if W < 95 — wait, spec says skip 4+5 if W<95, skip 5 only if W<135)
+// Set 4: 75% × 3 (included when working weight ≥ 40 kg)
+// Set 5: 85% × 2 (added when working weight ≥ 60 kg)
+const BAR_KG = 20;          // Olympic barbell in kg (was 45 lb)
+const WARMUP_MIN_FULL = 40; // below this, sets 4 & 5 overlap working sets (~95 lb)
+const WARMUP_HEAVY = 60;    // at/above this, add the top 85% single (~135 lb)
 function buildCompoundWarmup(workingWeight: number): WorkingSet[] {
   const sets: WorkingSet[] = [];
 
   // Set 1: bar only — always included for compound lifts
-  sets.push({ weight: 45, reps: 10 });
+  sets.push({ weight: BAR_KG, reps: 10 });
 
   // Set 2: 40% of working weight
   sets.push({ weight: roundToNearest5(workingWeight * 0.4), reps: 8 });
@@ -67,16 +70,16 @@ function buildCompoundWarmup(workingWeight: number): WorkingSet[] {
   sets.push({ weight: roundToNearest5(workingWeight * 0.6), reps: 5 });
 
   // Set 4 and 5 only make sense when working weight is high enough
-  if (workingWeight < 95) {
+  if (workingWeight < WARMUP_MIN_FULL) {
     // Weight is so low that sets 4 and 5 would overlap with working sets — skip both
     return sets;
   }
 
-  // Set 4: 75% — include when working weight ≥ 95 lbs (spec: skip both only if < 95)
+  // Set 4: 75%
   sets.push({ weight: roundToNearest5(workingWeight * 0.75), reps: 3 });
 
-  // Set 5: 85% — skip if working weight < 135 lbs (too close to working weight range)
-  if (workingWeight >= 135) {
+  // Set 5: 85% — only when working weight is heavy enough to warrant a top single-ish set
+  if (workingWeight >= WARMUP_HEAVY) {
     sets.push({ weight: roundToNearest5(workingWeight * 0.85), reps: 2 });
   }
 

@@ -1,49 +1,31 @@
 // src/progression.ts
-// Rule 1 (increase) and Rule 2 (hold) — the core progression engine
+// The core progression engine — encodes the coach's observed loading rules, distilled from
+// 15 athletes / 6,276 sessions via the CoachDecisions pipeline (see CoachDecisions/CLAUDE.md).
+//
+// Distilled rules (these SUPERSEDE the original textbook thresholds):
+//   • The coach increases load when the athlete still has reserve (~2–3 RIR) AND has held the
+//     weight for the category's wait window — NOT when grinding to ≤2 RIR. Increases cluster at
+//     2–3 RIR; the coach consolidates (holds) only when the athlete is near failure (≤1 RIR).
+//   • The robust signal is the wait window (large-N): ~2 sessions at a weight for lower/push/pull,
+//     ~3 for triceps/accessory. The RIR floor is a sanity gate, not a finely-tuned threshold
+//     (RIR-before-increase is thin, free-text data — treated coarsely on purpose).
+//   • Increment: 5 kg lower-body, 2.5 kg upper/accessory. (No 10 kg tier — that was lb mislabeled.)
+//   • Leg press is a volume tool — never driven by load progression.
+//
+// All weights are in kg.
 
 import { AthleteHistory, ProgressionDecision, WorkingSet } from './types';
 import {
   avgRIR,
   getRecentSessions,
-  sessionsSinceDeload,
-  detectPhase,
-  classifyLift,
-  roundToNearest5,
+  classifyMovement,
+  getCategoryIncrement,
+  getMinSessionsAtWeight,
+  isVolumeOnly,
+  consecutiveSessionsAtWeight,
+  roundToHalfKg,
   getMaxWeight,
-  isRIRTrendingDown,
-  LiftType,
 } from './utils';
-
-// Increment table by lift type and phase
-// Data-derived: early/mid phase athletes absorb larger jumps cleanly post-deload (Finding 3)
-function getBaseIncrement(liftType: LiftType, phase: string): number {
-  switch (liftType) {
-    case 'barbell-upper':
-      // +10 in early/mid, +5 only when deeply into a training block (late phase)
-      if (phase === 'early' || phase === 'mid') return 10;
-      return 5; // late
-
-    case 'barbell-lower':
-      // Lower body tolerates larger jumps across all phases — stronger muscles, larger absolute loads
-      return 10;
-
-    case 'dumbbell':
-      // Dumbbell increments are always +5: smaller plates, finer control needed
-      return 5;
-
-    case 'machine':
-      // Machine increments are always +5: stack plates are small, stabilizer demand is low
-      return 5;
-  }
-}
-
-// Reduce increment by one step when last RIR === 1 exactly
-// Athlete is very close to failure — a smaller jump is safer
-function reduceIncrement(increment: number): number {
-  if (increment >= 10) return 5;
-  if (increment >= 5) return 2.5;
-  return increment; // already at minimum, no further reduction
-}
 
 // Main function: analyze session history and return a progression decision
 export function getProgressionDecision(
@@ -52,9 +34,28 @@ export function getProgressionDecision(
 ): ProgressionDecision {
   const normalizedName = exerciseName.toLowerCase().trim();
 
-  // Check if the most recent session for this exercise (any status) was missed.
-  // getRecentSessions only returns completed sessions, so a missed last session would
-  // otherwise be invisible — leading to a false 'increase' decision (Rule 2, missed = hold).
+  // ── Leg press (and other volume-only lifts): never drive weight progression ──────────
+  // Distilled rule: leg press accumulates ~0 net load across the entire roster — it is
+  // programmed for volume, not strength. Checked first so the "lower → 5 kg" branch never
+  // progresses it.
+  if (isVolumeOnly(exerciseName)) {
+    const recent = getRecentSessions(history.sessions, exerciseName, 1);
+    const ex = recent[0]?.exercises.find(
+      e => e.name.toLowerCase().trim() === normalizedName && !e.isWarmup
+    );
+    const lastWeight = ex ? getMaxWeight(ex.sets) : 0;
+    return {
+      action: 'hold',
+      suggestedWeight: lastWeight,
+      increment: 0,
+      confidence: 'high',
+      reason: 'Leg press is programmed as a volume tool in this system — hold weight, add reps/volume rather than load',
+    };
+  }
+
+  // ── Missed last session: hold (don't progress off an incomplete data point) ───────────
+  // getRecentSessions returns only completed sessions, so a missed most-recent session would
+  // otherwise be invisible and produce a false 'increase'.
   const allSessionsWithExercise = history.sessions
     .filter(s =>
       s.exercises.some(e => e.name.toLowerCase().trim() === normalizedName && !e.isWarmup)
@@ -63,13 +64,11 @@ export function getProgressionDecision(
 
   const rawLastSession = allSessionsWithExercise[0];
   if (rawLastSession?.status === 'missed') {
-    // Find last completed weight to report as suggestedWeight (don't regress)
     const lastCompleted = allSessionsWithExercise.find(s => s.status === 'completed');
     const lastCompletedEx = lastCompleted?.exercises.find(
       e => e.name.toLowerCase().trim() === normalizedName && !e.isWarmup
     );
     const lastWeight = lastCompletedEx ? getMaxWeight(lastCompletedEx.sets) : 0;
-
     return {
       action: 'hold',
       suggestedWeight: lastWeight,
@@ -88,7 +87,6 @@ export function getProgressionDecision(
       e => e.name.toLowerCase().trim() === normalizedName && !e.isWarmup
     );
     const lastWeight = lastExercise ? getMaxWeight(lastExercise.sets) : 0;
-
     return {
       action: 'insufficient_data',
       suggestedWeight: lastWeight,
@@ -116,17 +114,7 @@ export function getProgressionDecision(
   const lastWeight = getMaxWeight(lastExercise.sets);
   const lastAvgRIR = avgRIR(lastExercise.sets);
 
-  // Collect avg RIR for the last 2–3 sessions to check trend and overall average
-  const last3Sessions = recentSessions.slice(-3);
-  const last3AvgRIRs: (number | null)[] = last3Sessions.map(sess => {
-    const ex = sess.exercises.find(
-      e => e.name.toLowerCase().trim() === normalizedName && !e.isWarmup
-    );
-    if (!ex) return null;
-    return avgRIR(ex.sets);
-  });
-
-  // Compute overall average RIR across all sets in last 2 sessions
+  // Average RIR across the last 2 sessions (stability vs. a single noisy session)
   const last2Sessions = recentSessions.slice(-2);
   const allSetsLast2: WorkingSet[] = last2Sessions.flatMap(sess => {
     const ex = sess.exercises.find(
@@ -134,28 +122,13 @@ export function getProgressionDecision(
     );
     return ex ? ex.sets : [];
   });
-  const overallAvgRIR = avgRIR(allSetsLast2);
+  const recentAvgRIR = avgRIR(allSetsLast2);
 
-  // Determine training context
-  const sinceDeload = sessionsSinceDeload(history.sessions, history.lastDeloadDate);
-  const isCurrentlyDeloading = lastSession.isDeload === true;
+  const category = classifyMovement(exerciseName);
 
-  // If RIR is trending down across last 3, shift phase one step later (more conservative)
-  const trendingDown = isRIRTrendingDown(last3AvgRIRs);
-  let adjustedSinceDeload = sinceDeload;
-  if (trendingDown) {
-    // Shift one phase later: add enough to push into next threshold
-    if (sinceDeload <= 4) adjustedSinceDeload = 5;       // early → mid
-    else if (sinceDeload <= 8) adjustedSinceDeload = 9;  // mid → late
-  }
+  // ── Hold conditions (safety first) ───────────────────────────────────────────────────
 
-  const phase = detectPhase(adjustedSinceDeload, isCurrentlyDeloading);
-  const liftType = classifyLift(exerciseName);
-
-  // ── Rule 2: Hold conditions (checked first — safety takes priority) ──────────
-  // Any one of these means we hold weight and consolidate
-
-  if (isCurrentlyDeloading) {
+  if (lastSession.isDeload === true) {
     return {
       action: 'hold',
       suggestedWeight: lastWeight,
@@ -165,82 +138,63 @@ export function getProgressionDecision(
     };
   }
 
-  if (lastSession.status === 'missed') {
-    return {
-      action: 'hold',
-      suggestedWeight: lastWeight,
-      increment: 0,
-      confidence: 'low',
-      reason: 'Last session was missed — repeat the weight before progressing',
-    };
-  }
-
-  if (lastAvgRIR === 0) {
-    // RIR = 0 means athlete hit failure — do not progress, consolidate first
+  // Consolidate near failure: the coach almost never adds load at ≤1 RIR (and never at 0).
+  if (lastAvgRIR !== null && lastAvgRIR <= 1) {
     return {
       action: 'hold',
       suggestedWeight: lastWeight,
       increment: 0,
       confidence: 'high',
-      reason: 'Last session hit 0 RIR (failure) — hold weight and consolidate before adding load',
+      reason: `Last session averaged ${lastAvgRIR.toFixed(1)} RIR (≤ 1, near failure) — consolidate at this weight before adding load`,
     };
   }
 
-  if (overallAvgRIR !== null && overallAvgRIR >= 3.0) {
-    // Still too much in the tank — hold, the load is not challenging enough to warrant a bigger increase
-    // But this still isn't a "progress" signal since we need ≤2.0 avg
+  // ── Progression trigger ───────────────────────────────────────────────────────────────
+  // Increase when: the athlete has reserve (avg ≥ 2 RIR over the last 2 sessions) AND has held
+  // the weight for the category's wait window AND both recent sessions were completed.
+  const minSessions = getMinSessionsAtWeight(category);
+  const sessionsAtWeight = consecutiveSessionsAtWeight(recentSessions, exerciseName);
+  const allCompleted = last2Sessions.every(s => s.status === 'completed');
+  const hasReserve = recentAvgRIR !== null && recentAvgRIR >= 2;
+
+  if (hasReserve && allCompleted && sessionsAtWeight >= minSessions) {
+    const increment = getCategoryIncrement(category);
+    const suggestedWeight = roundToHalfKg(lastWeight + increment);
+    return {
+      action: 'increase',
+      suggestedWeight,
+      increment,
+      confidence: 'high',
+      reason: `${sessionsAtWeight} sessions at this weight with ~${(recentAvgRIR ?? 0).toFixed(1)} RIR in reserve — ready to progress (+${increment} kg, ${category})`,
+    };
+  }
+
+  // ── Hold (trigger not met) — explain which condition is missing ───────────────────────
+  if (recentAvgRIR === null) {
+    return {
+      action: 'hold',
+      suggestedWeight: lastWeight,
+      increment: 0,
+      confidence: 'low',
+      reason: 'No RIR data recorded — cannot assess readiness to progress; hold weight and start logging RIR',
+    };
+  }
+
+  if (sessionsAtWeight < minSessions) {
     return {
       action: 'hold',
       suggestedWeight: lastWeight,
       increment: 0,
       confidence: 'medium',
-      reason: `Average RIR across last 2 sessions is ${overallAvgRIR.toFixed(1)} (≥ 3.0) — athlete has plenty of capacity, hold weight to build consistency before increasing`,
+      reason: `Only ${sessionsAtWeight} session(s) at this weight — coach holds ~${minSessions} for ${category} work before adding load`,
     };
   }
 
-  // ── Rule 1: Progression trigger (ALL must be true) ────────────────────────────
-  const allSessionsCompleted = last2Sessions.every(s => s.status === 'completed');
-  const hasEnoughSessions = recentSessions.length >= 2;
-  const avgRIRMeetsThreshold = overallAvgRIR !== null && overallAvgRIR <= 2.0;
-  const lastRIRNotZero = lastAvgRIR !== 0; // already handled above but explicit here
-
-  if (
-    hasEnoughSessions &&
-    allSessionsCompleted &&
-    avgRIRMeetsThreshold &&
-    lastRIRNotZero &&
-    !isCurrentlyDeloading
-  ) {
-    let increment = getBaseIncrement(liftType, phase);
-
-    // If athlete is right at the edge (RIR = 1 exactly), reduce increment one step
-    // This preserves momentum without overloading — Finding 3 observed this pattern
-    if (lastAvgRIR === 1) {
-      increment = reduceIncrement(increment);
-    }
-
-    const suggestedWeight = roundToNearest5(lastWeight + increment);
-    const hasRIRData = last3AvgRIRs.some(r => r !== null);
-    const confidence = hasRIRData && last2Sessions.length >= 2 ? 'high' : 'medium';
-
-    return {
-      action: 'increase',
-      suggestedWeight,
-      increment,
-      confidence,
-      reason: `${last2Sessions.length} consecutive sessions at avg ${(overallAvgRIR ?? 0).toFixed(1)} RIR — ready to progress (+${increment} lbs, ${phase} phase)`,
-    };
-  }
-
-  // ── Fallback: not enough info to progress, hold ──────────────────────────────
-  const noRIRAtAll = overallAvgRIR === null;
   return {
     action: 'hold',
     suggestedWeight: lastWeight,
     increment: 0,
-    confidence: noRIRAtAll ? 'low' : 'medium',
-    reason: noRIRAtAll
-      ? 'No RIR data recorded — cannot assess readiness to progress; hold weight and start logging RIR'
-      : `Conditions for progression not fully met — hold at current weight`,
+    confidence: 'medium',
+    reason: `Average RIR ${recentAvgRIR.toFixed(1)} over the last 2 sessions — hold at current weight`,
   };
 }

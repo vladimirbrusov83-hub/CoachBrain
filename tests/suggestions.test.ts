@@ -30,12 +30,12 @@ function benchSession(
 }
 
 describe('getCoachDecision — integration', () => {
-  it('3 sessions bench press, avg 1.8 RIR → action=increase, deloadWarning=false', () => {
+  it('3 sessions bench press held at weight, ~2 RIR → action=increase, deloadWarning=false', () => {
     const history: AthleteHistory = {
       sessions: [
-        benchSession(185, 2, '2024-01-01'),
-        benchSession(185, 2, '2024-01-08'),
-        benchSession(185, 1, '2024-01-15'),
+        benchSession(80, 2, '2024-01-01'),
+        benchSession(80, 2, '2024-01-08'),
+        benchSession(80, 2, '2024-01-15'),
       ],
     };
 
@@ -46,8 +46,8 @@ describe('getCoachDecision — integration', () => {
     expect(decision.deloadWarning).toBe(false);
     expect(decision.deloadTriggered).toBe(false);
 
-    // Should suggest higher weight
-    expect(decision.progression.suggestedWeight).toBeGreaterThan(185);
+    // Should suggest higher weight (bench = upper → +2.5 kg)
+    expect(decision.progression.suggestedWeight).toBeGreaterThan(80);
 
     // Should have warmup sets (it's a compound)
     expect(decision.nextSession.warmupSets.length).toBeGreaterThan(0);

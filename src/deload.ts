@@ -139,7 +139,7 @@ export function getDeloadSessionPlan(currentWeight: number): {
   const deloadWeight = Math.round((currentWeight * 0.45) / 5) * 5;
 
   return {
-    deloadWeight: Math.max(deloadWeight, 45), // never go below bar weight
+    deloadWeight: Math.max(deloadWeight, 20), // never go below the empty bar (20 kg)
     repTarget: 0,    // caller fills in from last session's rep target
     setReduction: 1, // drop 1 set per exercise during deload week
   };

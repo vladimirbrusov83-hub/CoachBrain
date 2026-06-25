@@ -1,22 +1,18 @@
 // tests/progression.test.ts
+// Asserts the DISTILLED coaching rules (CoachDecisions, 15 athletes), not the v1 thresholds:
+//   • increase when reserve ≥ ~2 RIR AND the weight has been held for the category wait window
+//   • consolidate (hold) near failure (≤ 1 RIR)
+//   • increment 5 kg lower-body / 2.5 kg upper+accessory
+//   • leg press is volume-only — never progressed
+// All weights in kg.
 
 import { describe, it, expect } from 'vitest';
 import { getProgressionDecision } from '../src/progression';
 import { AthleteHistory, Session } from '../src/types';
 
-// Helper: build a simple AthleteHistory with N completed sessions for one exercise
-function buildHistory(sessions: Partial<Session>[], lastDeloadDate?: string): AthleteHistory {
-  const fullSessions: Session[] = sessions.map((s, i) => ({
-    date: `2024-01-${String(i + 1).padStart(2, '0')}`,
-    status: 'completed',
-    exercises: [],
-    ...s,
-  }));
-  return { sessions: fullSessions, lastDeloadDate };
-}
-
-// Helper: build a session with a bench press entry
-function benchSession(
+// Build a session for a named exercise at a given top weight + RIR
+function exSession(
+  name: string,
   weight: number,
   rir: number | undefined,
   overrides: Partial<Session> = {}
@@ -25,7 +21,7 @@ function benchSession(
     status: 'completed',
     exercises: [
       {
-        name: 'BB bench press',
+        name,
         sets: [
           { weight, reps: 8, rir },
           { weight, reps: 8, rir },
@@ -37,177 +33,129 @@ function benchSession(
   };
 }
 
-describe('getProgressionDecision', () => {
-  // ── Basic trigger tests ────────────────────────────────────────────────────
+function buildHistory(sessions: Partial<Session>[], lastDeloadDate?: string): AthleteHistory {
+  const full: Session[] = sessions.map((s, i) => ({
+    date: `2024-01-${String(i + 1).padStart(2, '0')}`,
+    status: 'completed',
+    exercises: [],
+    ...s,
+  }));
+  return { sessions: full, lastDeloadDate };
+}
 
-  it('2 sessions at avg 2.0 RIR → action = increase', () => {
-    const history = buildHistory([
-      benchSession(185, 2),
-      benchSession(185, 2),
+describe('getProgressionDecision — distilled rules', () => {
+  // ── Increase trigger (reserve + wait window) ─────────────────────────────────
+  it('lower-body: 2 sessions held at weight with ~2 RIR → increase +5 kg', () => {
+    const h = buildHistory([exSession('squat', 100, 2), exSession('squat', 100, 2)]);
+    const r = getProgressionDecision(h, 'squat');
+    expect(r.action).toBe('increase');
+    expect(r.increment).toBe(5);
+    expect(r.suggestedWeight).toBe(105);
+  });
+
+  it('upper-body: 2 sessions held at weight with ~2 RIR → increase +2.5 kg', () => {
+    const h = buildHistory([exSession('BB bench press', 80, 2), exSession('BB bench press', 80, 2)]);
+    const r = getProgressionDecision(h, 'BB bench press');
+    expect(r.action).toBe('increase');
+    expect(r.increment).toBe(2.5);
+    expect(r.suggestedWeight).toBe(82.5);
+  });
+
+  it('plenty of reserve (RIR 4) with wait window met → still increase (load too light)', () => {
+    const h = buildHistory([exSession('BB bench press', 80, 4), exSession('BB bench press', 80, 4)]);
+    const r = getProgressionDecision(h, 'BB bench press');
+    expect(r.action).toBe('increase');
+  });
+
+  // ── Wait window ───────────────────────────────────────────────────────────────
+  it('weight changed last session (held only 1) → hold, wait window not met', () => {
+    const h = buildHistory([exSession('BB bench press', 80, 2), exSession('BB bench press', 82.5, 2)]);
+    const r = getProgressionDecision(h, 'BB bench press');
+    expect(r.action).toBe('hold');
+    expect(r.reason).toMatch(/session.*at this weight|wait/i);
+  });
+
+  it('triceps waits 3 sessions: 2 held → hold, 3 held → increase', () => {
+    const two = buildHistory([
+      exSession('Triceps pushdown', 30, 2),
+      exSession('Triceps pushdown', 30, 2),
     ]);
-    const result = getProgressionDecision(history, 'BB bench press');
-    expect(result.action).toBe('increase');
-  });
+    expect(getProgressionDecision(two, 'Triceps pushdown').action).toBe('hold');
 
-  it('last session RIR = 0 → action = hold', () => {
-    const history = buildHistory([
-      benchSession(185, 2),
-      benchSession(185, 0),
+    const three = buildHistory([
+      exSession('Triceps pushdown', 30, 2),
+      exSession('Triceps pushdown', 30, 2),
+      exSession('Triceps pushdown', 30, 2),
     ]);
-    const result = getProgressionDecision(history, 'BB bench press');
-    expect(result.action).toBe('hold');
-    expect(result.reason).toMatch(/failure/i);
+    const r3 = getProgressionDecision(three, 'Triceps pushdown');
+    expect(r3.action).toBe('increase');
+    expect(r3.increment).toBe(2.5);
   });
 
-  it('only 1 completed session → action = insufficient_data', () => {
-    const history = buildHistory([
-      benchSession(185, 2),
+  // ── Consolidate near failure ────────────────────────────────────────────────
+  it('last session at 1 RIR → hold to consolidate (near failure)', () => {
+    const h = buildHistory([exSession('squat', 100, 2), exSession('squat', 100, 1)]);
+    const r = getProgressionDecision(h, 'squat');
+    expect(r.action).toBe('hold');
+    expect(r.reason).toMatch(/near failure|consolidate/i);
+  });
+
+  it('last session at 0 RIR (failure) → hold', () => {
+    const h = buildHistory([exSession('squat', 100, 2), exSession('squat', 100, 0)]);
+    expect(getProgressionDecision(h, 'squat').action).toBe('hold');
+  });
+
+  it('grinding last session overrides a 2-session average ≥ 2 → hold', () => {
+    // avg(3,1) = 2, but the most recent session is at 1 RIR → consolidate
+    const h = buildHistory([exSession('squat', 100, 3), exSession('squat', 100, 1)]);
+    expect(getProgressionDecision(h, 'squat').action).toBe('hold');
+  });
+
+  // ── Leg press: volume-only ────────────────────────────────────────────────────
+  it('leg press never progresses on load, even with wait window + reserve', () => {
+    const h = buildHistory([
+      exSession('Leg Press', 200, 3),
+      exSession('Leg Press', 200, 3),
+      exSession('Leg Press', 200, 3),
     ]);
-    const result = getProgressionDecision(history, 'BB bench press');
-    expect(result.action).toBe('insufficient_data');
-    expect(result.confidence).toBe('low');
-  });
-
-  it('avg RIR ≥ 3.0 → action = hold', () => {
-    const history = buildHistory([
-      benchSession(185, 3),
-      benchSession(185, 4),
-    ]);
-    const result = getProgressionDecision(history, 'BB bench press');
-    expect(result.action).toBe('hold');
-    expect(result.reason).toMatch(/3\.0|plenty of capacity/i);
-  });
-
-  // ── Phase and increment tests ──────────────────────────────────────────────
-
-  it('bench press in mid phase (6 sessions since deload) → +10 lbs', () => {
-    // 6 sessions since deload puts us in mid phase — bench upper = +10 in mid
-    const sessionsData: Partial<Session>[] = [];
-    // 6 sessions total since deload (no lastDeloadDate means all sessions count)
-    for (let i = 0; i < 6; i++) {
-      sessionsData.push({
-        ...benchSession(185, 2),
-        date: `2024-0${i < 6 ? 1 : 2}-${String(i + 1).padStart(2, '0')}`,
-      });
-    }
-    const history: AthleteHistory = {
-      sessions: sessionsData.map((s, i) => ({
-        date: `2024-01-${String(i + 1).padStart(2, '0')}`,
-        status: 'completed',
-        exercises: [],
-        ...s,
-      })),
-    };
-    const result = getProgressionDecision(history, 'BB bench press');
-    expect(result.action).toBe('increase');
-    expect(result.increment).toBe(10);
-  });
-
-  it('bench press in late phase (10 sessions since deload) → +5 lbs', () => {
-    const sessionsData: Partial<Session>[] = Array.from({ length: 10 }, (_, i) =>
-      benchSession(185, 2)
-    );
-    const history: AthleteHistory = {
-      sessions: sessionsData.map((s, i) => ({
-        date: `2024-01-${String(i + 1).padStart(2, '0')}`,
-        status: 'completed',
-        exercises: [],
-        ...s,
-      })),
-    };
-    const result = getProgressionDecision(history, 'BB bench press');
-    expect(result.action).toBe('increase');
-    expect(result.increment).toBe(5);
-  });
-
-  it('squat in late phase → +10 lbs (lower body stays at 10 throughout)', () => {
-    const sessionsData = Array.from({ length: 10 }, () => ({
-      status: 'completed' as const,
-      exercises: [
-        {
-          name: 'squat',
-          sets: [
-            { weight: 225, reps: 5, rir: 2 },
-            { weight: 225, reps: 5, rir: 2 },
-            { weight: 225, reps: 5, rir: 2 },
-          ],
-        },
-      ],
-    }));
-    const history: AthleteHistory = {
-      sessions: sessionsData.map((s, i) => ({
-        ...s,
-        date: `2024-01-${String(i + 1).padStart(2, '0')}`,
-      })),
-    };
-    const result = getProgressionDecision(history, 'squat');
-    expect(result.action).toBe('increase');
-    expect(result.increment).toBe(10); // barbell-lower: always +10
-  });
-
-  it('dumbbell exercise → +5 always (regardless of phase)', () => {
-    const sessionsData = Array.from({ length: 10 }, () => ({
-      status: 'completed' as const,
-      exercises: [
-        {
-          name: 'DB shoulder press',
-          sets: [
-            { weight: 50, reps: 10, rir: 2 },
-            { weight: 50, reps: 10, rir: 2 },
-          ],
-        },
-      ],
-    }));
-    const history: AthleteHistory = {
-      sessions: sessionsData.map((s, i) => ({
-        ...s,
-        date: `2024-01-${String(i + 1).padStart(2, '0')}`,
-      })),
-    };
-    const result = getProgressionDecision(history, 'DB shoulder press');
-    expect(result.action).toBe('increase');
-    expect(result.increment).toBe(5); // dumbbell: always +5
-  });
-
-  it('last RIR exactly 1 → increment reduced one step (10 → 5 for barbell-upper mid)', () => {
-    // 6 sessions = mid phase, bench = barbell-upper, base increment = 10
-    // Last RIR = 1 exactly → should reduce to 5
-    const sessionsData = Array.from({ length: 5 }, () => benchSession(185, 2));
-    // Last session: RIR = 1 exactly
-    sessionsData.push(benchSession(185, 1));
-
-    const history: AthleteHistory = {
-      sessions: sessionsData.map((s, i) => ({
-        date: `2024-01-${String(i + 1).padStart(2, '0')}`,
-        status: 'completed',
-        exercises: [],
-        ...s,
-      })),
-    };
-    const result = getProgressionDecision(history, 'BB bench press');
-    expect(result.action).toBe('increase');
-    expect(result.increment).toBe(5); // reduced from 10 → 5
+    const r = getProgressionDecision(h, 'Leg Press');
+    expect(r.action).toBe('hold');
+    expect(r.reason).toMatch(/volume/i);
   });
 
   // ── Edge cases ─────────────────────────────────────────────────────────────
-
-  it('missed last session → action = hold with low confidence', () => {
-    const history = buildHistory([
-      benchSession(185, 2),
-      { ...benchSession(185, 2), status: 'missed' },
+  it('currently in a deload week → hold', () => {
+    const h = buildHistory([
+      exSession('BB bench press', 80, 2),
+      exSession('BB bench press', 80, 2, { isDeload: true }),
     ]);
-    const result = getProgressionDecision(history, 'BB bench press');
-    expect(result.action).toBe('hold');
-    expect(result.confidence).toBe('low');
+    const r = getProgressionDecision(h, 'BB bench press');
+    expect(r.action).toBe('hold');
+    expect(r.reason).toMatch(/deload/i);
   });
 
-  it('currently in deload → action = hold', () => {
-    const history = buildHistory([
-      benchSession(185, 2),
-      { ...benchSession(185, 2), isDeload: true },
+  it('missed last session → hold, low confidence', () => {
+    const h = buildHistory([
+      exSession('BB bench press', 80, 2),
+      exSession('BB bench press', 80, 2, { status: 'missed' }),
     ]);
-    const result = getProgressionDecision(history, 'BB bench press');
-    expect(result.action).toBe('hold');
-    expect(result.reason).toMatch(/deload/i);
+    const r = getProgressionDecision(h, 'BB bench press');
+    expect(r.action).toBe('hold');
+    expect(r.confidence).toBe('low');
+  });
+
+  it('only 1 completed session → insufficient_data', () => {
+    const h = buildHistory([exSession('BB bench press', 80, 2)]);
+    expect(getProgressionDecision(h, 'BB bench press').action).toBe('insufficient_data');
+  });
+
+  it('no RIR data → hold and ask to log RIR', () => {
+    const h = buildHistory([
+      exSession('BB bench press', 80, undefined),
+      exSession('BB bench press', 80, undefined),
+    ]);
+    const r = getProgressionDecision(h, 'BB bench press');
+    expect(r.action).toBe('hold');
+    expect(r.reason).toMatch(/RIR/i);
   });
 });
