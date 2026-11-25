@@ -155,7 +155,7 @@ export function classifyMovement(exerciseName: string): MovementCategory {
   if (/\brow\b|pulldown|pull.?up|chin.?up|\blat\b|face pull|shrug|rear delt|posterior fly|reverse fly/.test(name))
     return 'pull';
 
-  if (/bench press|incline|chest press|chest fly|\bpec\b|military|overhead press|\bohp\b|shoulder press|\bdips?\b|push.?up|lateral raise|shoulder fly|front raise/.test(name))
+  if (/bench press|incline|chest press|chest fly|\bpec\b|military|overhead press|\bohp\b|shoulder press|dumbbell press|\bdb press\b|\bdips?\b|push.?up|lateral raise|shoulder fly|front raise/.test(name))
     return 'push';
 
   return 'accessory';
